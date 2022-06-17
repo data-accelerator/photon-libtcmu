@@ -15,40 +15,40 @@ find_package(nl REQUIRED)
 find_package(photon REQUIRED)
 
 # Stuff for building the shared library
-add_library(libtcmu SHARED
+add_library(tcmu SHARED
   configfs.cpp
   api.cpp
   libtcmu.cpp
   scsi.cpp
 )
-set_target_properties(libtcmu
+set_target_properties(tcmu
   PROPERTIES
   VERSION 2.2
   SOVERSION "2"
 )
-target_include_directories(libtcmu
+target_include_directories(tcmu
   PUBLIC ${LIBNL_INCLUDE_DIR}
   PUBLIC ${PHOTON_INCLUDE_DIR}
 )
-target_link_libraries(libtcmu
+target_link_libraries(tcmu
   ${LIBNL_LIB}
   ${LIBNL_GENL_LIB}
   photon
 )
-install(TARGETS libtcmu LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS tcmu LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 # Stuff for building the static library
-add_library(libtcmu_static
+add_library(tcmu_static
   configfs.cpp
   api.cpp
   libtcmu.cpp
   scsi.cpp
 )
-target_include_directories(libtcmu_static
+target_include_directories(tcmu_static
   PUBLIC ${LIBNL_INCLUDE_DIR}
   PUBLIC ${PHOTON_INCLUDE_DIR}
 )
-target_link_libraries(libtcmu_static
+target_link_libraries(tcmu_static
   ${LIBNL_LIB}
   ${LIBNL_GENL_LIB}
   photon
