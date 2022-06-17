@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.11)
+cmake_minimum_required (VERSION 3.14)
 project (photon-libtcmu CXX)
 set(VERSION 1.5.4)
 
@@ -44,6 +44,7 @@ add_library(tcmu_static
   libtcmu.cpp
   scsi.cpp
 )
+set_target_properties(tcmu_static PROPERTIES OUTPUT_NAME tcmu)
 target_include_directories(tcmu_static
   PUBLIC ${LIBNL_INCLUDE_DIR}
   PUBLIC ${PHOTON_INCLUDE_DIR}
@@ -51,5 +52,5 @@ target_include_directories(tcmu_static
 target_link_libraries(tcmu_static
   ${LIBNL_LIB}
   ${LIBNL_GENL_LIB}
-  photon
+  photon_static
 )
