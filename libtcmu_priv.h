@@ -27,7 +27,7 @@
 struct tcmulib_context {
 	std::vector<struct tcmulib_handler> handlers;
 	std::map<std::string, struct tcmu_device*> devices;
-	struct nl_sock *nl_sock;
+	struct nl_sock *nl_sock = nullptr;
 };
 
 struct tcmu_device {

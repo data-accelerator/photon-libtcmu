@@ -503,14 +503,15 @@ static bool device_open_shm(struct tcmu_device *dev)
 	/* open the map */
 	dev->fd = open(mmap_name, O_RDWR | O_NONBLOCK | O_CLOEXEC);
 	if (dev->fd == -1) {
-		LOG_ERROR("could not open `", mmap_name);
+		LOG_ERROR("could not open `, errno: `", mmap_name, errno);
 		goto err_mmap_name;
 	}
 
 	/* bring the map into memory */
 	dev->map = mmap(NULL, dev->map_len, PROT_READ|PROT_WRITE, MAP_SHARED, dev->fd, mmap_offset);
 	if (dev->map == MAP_FAILED) {
-		LOG_ERROR("could not mmap `", mmap_name);
+		LOG_ERROR("could not mmap `, mmap len: `, mmap off: `, fd: `, errno: `",
+			mmap_name, dev->map_len, mmap_offset, dev->fd, errno);
 		goto err_fd_close;
 	}
 
@@ -546,6 +547,7 @@ static int device_add(struct tcmulib_context *ctx, char *dev_name,
 		LOG_ERROR("calloc failed for device_add()");
 		return -ENOMEM;
 	}
+	memset(dev, 0, sizeof(struct tcmu_device));
 
 	if (!device_parse_cfg(dev, dev_name, cfgstring))
 		goto err_free;
@@ -735,7 +737,7 @@ static int open_devices(struct tcmulib_context *ctx)
 			continue;
 
 		if (device_add(ctx, dirent_list[i]->d_name, dev_name, true) < 0) {
-			free (dev_name);
+			free(dev_name);
 			continue;
 		}
 		free(dev_name);
