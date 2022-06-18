@@ -619,7 +619,8 @@ err_free:
 
 static void close_devices(struct tcmulib_context *ctx)
 {
-	for (auto &dev : ctx->devices) {
+	auto devices = ctx->devices;
+	for (auto dev : devices) {
 		device_remove(ctx, dev.second->dev_name, true);
 	}
 }
