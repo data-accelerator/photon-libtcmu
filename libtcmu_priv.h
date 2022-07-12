@@ -20,6 +20,7 @@
 
 #include <vector>
 #include <map>
+#include <string>
 
 #define KERN_IFACE_VER 2
 
