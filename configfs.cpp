@@ -81,7 +81,7 @@ uint64_t tcmu_cfgfs_dev_get_info_u64(struct tcmu_device *dev, const char *name,
 	fd = open(path, O_RDONLY);
 	if (fd == -1) {
 		if (errno == ENOENT) {
-			LOG_ERROR("Kernel does not support device info file `.\n", path);
+			LOG_ERROR("Kernel does not support device info file `.", path);
 		} else {
 			LOG_ERROR("Could not open device info file `: `", path, strerror(errno));
 		}
@@ -92,7 +92,7 @@ uint64_t tcmu_cfgfs_dev_get_info_u64(struct tcmu_device *dev, const char *name,
 	ret = read(fd, buf, sizeof(buf));
 	close(fd);
 	if (ret == -1) {
-		LOG_ERROR("Could not read configfs to read dev info: %s", strerror(errno));
+		LOG_ERROR("Could not read configfs to read dev info: `", strerror(errno));
 		*fn_ret = -EINVAL;
 		return 0;
 	} else if (ret == 0) {
@@ -311,6 +311,6 @@ int tcmu_cfgfs_dev_exec_action(struct tcmu_device *dev, const char *name,
 		 dev->tcm_hba_name, dev->tcm_dev_name, name);
 	LOG_DEBUG("dev: `, executing action `", dev->tcm_dev_name, name);
 	ret = tcmu_cfgfs_set_u32(path, val);
-	LOG_DEBUG("dev: `, action ` done\n", dev->tcm_dev_name, name);
+	LOG_DEBUG("dev: `, action ` done", dev->tcm_dev_name, name);
 	return ret;
 }
