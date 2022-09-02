@@ -78,7 +78,10 @@ static struct genl_cmd tcmu_cmds[] = {
 };
 
 static struct genl_ops tcmu_ops = {
+	.o_hdrsize  = 0,
+	.o_id       = 0,
 	.o_name		= "TCM-USER",
+	.o_cache_ops = nullptr,
 	.o_cmds		= tcmu_cmds,
 	.o_ncmds	= ARRAY_SIZE(tcmu_cmds),
 };
