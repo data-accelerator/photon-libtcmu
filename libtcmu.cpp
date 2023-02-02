@@ -48,7 +48,7 @@ static struct nla_policy tcmu_attr_policy[TCMU_ATTR_MAX+1] = {
 
 static int device_add(struct tcmulib_context *ctx, char *dev_name,
 		      char *cfgstring, bool reopen);
-static void device_remove(struct tcmulib_context *ctx, char *dev_name,
+static int device_remove(struct tcmulib_context *ctx, char *dev_name,
 			  bool should_block);
 static int handle_netlink(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 			  struct genl_info *info, void *arg);
@@ -214,15 +214,20 @@ static int handle_netlink(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 		ret = device_add(ctx, buf,
 				 nla_get_string(info->attrs[TCMU_ATTR_DEVICE]),
 				 false);
+		if (ret == -ENOENT)
+			return 0;
 		break;
 	case TCMU_CMD_REMOVED_DEVICE:
 		reply_cmd = TCMU_CMD_REMOVED_DEVICE_DONE;
-		device_remove(ctx, buf, false);
-		ret = 0;
+		ret = device_remove(ctx, buf, false);
+		if (ret == -ENODEV)
+			return 0;
 		break;
 	case TCMU_CMD_RECONFIG_DEVICE:
 		reply_cmd = TCMU_CMD_RECONFIG_DEVICE_DONE;
 		ret = reconfig_device(ctx, buf, info);
+		if (ret == -ENODEV)
+			return 0;
 		break;
 	default:
 		LOG_ERROR("Unknown netlink command `. Netlink header received version `. libtcmu supports `",
@@ -557,8 +562,8 @@ static int device_add(struct tcmulib_context *ctx, char *dev_name,
 
 	dev->handler = find_handler(ctx, dev->cfgstring);
 	if (!dev->handler) {
-		LOG_ERROR("could not find handler for `", dev->dev_name);
-		goto err_free;
+		LOG_WARN("could not find handler for `, ignore", dev->dev_name);
+		goto err_nohandler;
 	}
 
 	if (dev->handler->check_config &&
@@ -619,6 +624,10 @@ err_unblock:
 		tcmu_cfgfs_dev_exec_action(dev, "block_dev", 0);
 err_free:
 	delete dev;
+	return -1;
+
+err_nohandler:
+	delete dev;
 	return -ENOENT;
 }
 
@@ -630,7 +639,7 @@ static void close_devices(struct tcmulib_context *ctx)
 	}
 }
 
-static void device_remove(struct tcmulib_context *ctx, char *dev_name,
+static int device_remove(struct tcmulib_context *ctx, char *dev_name,
 			  bool should_block)
 {
 	struct tcmu_device *dev;
@@ -638,7 +647,7 @@ static void device_remove(struct tcmulib_context *ctx, char *dev_name,
 	dev = lookup_dev_by_name(ctx, dev_name);
 	if (!dev) {
 		LOG_ERROR("Could not remove device `: not found.", dev_name);
-		return;
+		return -ENODEV;
 	}
 
 	/*
@@ -662,6 +671,7 @@ static void device_remove(struct tcmulib_context *ctx, char *dev_name,
 
 	LOG_DEBUG("[dev `] removed from tcmulib", dev->tcm_dev_name);
 	delete dev;
+	return 0;
 }
 
 static int read_uio_name(const char *uio_dev, char **dev_name)
