@@ -231,7 +231,7 @@ char *tcmu_cfgfs_get_str(const char *path)
 	 * char. Except for the last one, replace it with '\n' so parsers will
 	 * just see an empty member.
 	 */
-	if (ret != strlen(buf)) {
+	if (ret != (ssize_t)strlen(buf)) {
 		do {
 			n = strlen(buf);
 			buf[n] = '\n';

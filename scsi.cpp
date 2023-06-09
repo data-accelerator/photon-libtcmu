@@ -804,7 +804,7 @@ int tcmu_emulate_mode_sense(
 	/* Don't report block descriptors */
 
 	if (page_code == 0x3f) {
-		for (i = 0; i < ARRAY_SIZE(modesense_handlers); i++) {
+		for (i = 0; i < (int)ARRAY_SIZE(modesense_handlers); i++) {
 			ret = handle_mode_sense(dev, &modesense_handlers[i],
 						&buf, alloc_len, &used_len,
 						sense_ten);
@@ -814,7 +814,7 @@ int tcmu_emulate_mode_sense(
 	} else {
 		ret = 0;
 
-		for (i = 0; i < ARRAY_SIZE(modesense_handlers); i++) {
+		for (i = 0; i < (int)ARRAY_SIZE(modesense_handlers); i++) {
 			if (page_code == modesense_handlers[i].page &&
 			    subpage_code == modesense_handlers[i].subpage) {
 				ret = handle_mode_sense(dev,
@@ -888,7 +888,7 @@ int tcmu_emulate_mode_select(
 		return TCMU_STS_INVALID_CDB;
 
 	memset(buf, 0, sizeof(buf));
-	for (i = 0; i < ARRAY_SIZE(modesense_handlers); i++) {
+	for (i = 0; i < (int)ARRAY_SIZE(modesense_handlers); i++) {
 		if (page_code == modesense_handlers[i].page
 		    && subpage_code == modesense_handlers[i].subpage) {
 			ret = modesense_handlers[i].get(dev, &buf[hdr_len],

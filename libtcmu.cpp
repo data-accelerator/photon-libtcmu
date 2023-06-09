@@ -363,7 +363,7 @@ static struct tcmulib_handler *find_handler(struct tcmulib_context *ctx,
 	found_at = strchrnul(cfgstring, '/');
 	len = found_at - cfgstring;
 
-	for (int i = 0; i < ctx->handlers.size(); i++) {
+	for (size_t i = 0; i < ctx->handlers.size(); i++) {
 		if (!strncmp(cfgstring, ctx->handlers[i].subtype, len)) {
 			return &ctx->handlers[i];
 		}
@@ -405,7 +405,7 @@ static ssize_t read_size(const char *filename)
 
 	buf[len] = '\0'; /* null-terminate */
 	ret = strtoull(buf, &endbuf, 0);
-	if (buf == endbuf || ret == ULLONG_MAX)
+	if (buf == endbuf || (size_t)ret == ULLONG_MAX)
 		goto err;
 
 	return ret;
@@ -423,7 +423,7 @@ static bool device_parse_cfg(struct tcmu_device *dev,
 	const char *ptr, *oldptr;
 
 	len = snprintf(dev->dev_name, sizeof(dev->dev_name), "%s", dev_name);
-	if (len >= sizeof(dev->dev_name)) {
+	if (len >= (int)sizeof(dev->dev_name)) {
 		LOG_ERROR("device name too long for tcmu_device");
 		goto err_recompile;
 	}
@@ -443,7 +443,7 @@ static bool device_parse_cfg(struct tcmu_device *dev,
 		goto err_badcfg;
 	len = ptr-oldptr;
 	len = snprintf(dev->tcm_hba_name, sizeof(dev->tcm_hba_name), "user_%.*s", len, oldptr);
-	if (len >= sizeof(dev->tcm_hba_name)) {
+	if (len >= (int)sizeof(dev->tcm_hba_name)) {
 		LOG_ERROR("hba name too long for tcmu_device");
 		goto err_recompile;
 	}
@@ -455,7 +455,7 @@ static bool device_parse_cfg(struct tcmu_device *dev,
 		goto err_badcfg;
 	len = ptr-oldptr;
 	len = snprintf(dev->tcm_dev_name, sizeof(dev->tcm_dev_name), "%.*s", len, oldptr);
-	if (len >= sizeof(dev->tcm_dev_name)) {
+	if (len >= (int)sizeof(dev->tcm_dev_name)) {
 		LOG_ERROR("tcm device name too long for tcmu_device");
 		goto err_recompile;
 	}
@@ -463,7 +463,7 @@ static bool device_parse_cfg(struct tcmu_device *dev,
 	/* The rest is the handler-specific cfgstring */
 	oldptr = ptr+1;
 	len = snprintf(dev->cfgstring, sizeof(dev->cfgstring), "%s", oldptr);
-	if (len >= sizeof(dev->cfgstring)) {
+	if (len >= (int)sizeof(dev->cfgstring)) {
 		LOG_WARN("additional handler cfgstring was truncated");
 		/* not a terminal error. snprintf() will null-terminate */
 	}
@@ -681,7 +681,7 @@ static int read_uio_name(const char *uio_dev, char **dev_name)
 	}
 
 	ret = read(fd, buf, sizeof(buf));
-	if (ret <= 0 || ret >= sizeof(buf)) {
+	if (ret <= 0 || ret >= (int)sizeof(buf)) {
 		LOG_ERROR("read of ` had issues", tmp_path);
 		goto close;
 	}
@@ -1137,7 +1137,7 @@ struct tcmulib_cmd *tcmulib_get_next_command(struct tcmu_device *dev,
 			/* Convert iovec addrs in-place to not be offsets */
 			cmd->iov_cnt = ent->req.iov_cnt;
 			cmd->iovec = (struct iovec *) (cmd + 1);
-			for (i = 0; i < ent->req.iov_cnt; i++) {
+			for (i = 0; i < (int)ent->req.iov_cnt; i++) {
 				cmd->iovec[i].iov_base = (void *) mb +
 					(size_t) ent->req.iov[i].iov_base;
 				cmd->iovec[i].iov_len = ent->req.iov[i].iov_len;

@@ -4,8 +4,8 @@ set(VERSION 1.6.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic -fpermissive")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -fpermissive")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic -fpermissive -Wall -Werror=sign-compare")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -fpermissive -Wall -Werror=sign-compare")
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED on)

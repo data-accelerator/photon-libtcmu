@@ -235,7 +235,7 @@ static inline bool tcmu_zeroed_mem(const char *buf, size_t size)
 {
     int i;
 
-    for (i = 0; i < size; i++) {
+    for (i = 0; i < (int)size; i++) {
         if (buf[i])
 		return false;
     }
@@ -247,7 +247,7 @@ bool tcmu_iovec_zeroed(struct iovec *iovec, size_t iov_cnt)
 {
     int i;
 
-    for (i = 0; i < iov_cnt; i++) {
+    for (i = 0; i < (int)iov_cnt; i++) {
         if (!tcmu_zeroed_mem((char*)iovec[i].iov_base, iovec[i].iov_len))
 		return false;
     }
