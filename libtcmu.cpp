@@ -48,8 +48,8 @@ static struct nla_policy tcmu_attr_policy[TCMU_ATTR_MAX+1] = {
 
 static int device_add(struct tcmulib_context *ctx, char *dev_name,
 		      char *cfgstring, bool reopen);
-static void device_remove(struct tcmulib_context *ctx, char *dev_name,
-			  bool should_block);
+static int device_remove(struct tcmulib_context *ctx, char *dev_name,
+			 bool should_block);
 static int handle_netlink(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 			  struct genl_info *info, void *arg);
 
@@ -148,9 +148,9 @@ static int reconfig_device(struct tcmulib_context *ctx, char *dev_name,
 
 	dev = lookup_dev_by_name(ctx, dev_name);
 	if (!dev) {
-		LOG_ERROR("Could not reconfigure device `: not found.",
+		LOG_DEBUG("skipping reconfig for device `: not managed by us",
 			 dev_name);
-		return -ENODEV;
+		return -ENODATA;
 	}
 
 	if (info->attrs[TCMU_ATTR_DEV_CFG]) {
@@ -217,8 +217,7 @@ static int handle_netlink(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 		break;
 	case TCMU_CMD_REMOVED_DEVICE:
 		reply_cmd = TCMU_CMD_REMOVED_DEVICE_DONE;
-		device_remove(ctx, buf, false);
-		ret = 0;
+		ret = device_remove(ctx, buf, false);
 		break;
 	case TCMU_CMD_RECONFIG_DEVICE:
 		reply_cmd = TCMU_CMD_RECONFIG_DEVICE_DONE;
@@ -230,7 +229,7 @@ static int handle_netlink(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 		return -EOPNOTSUPP;
 	}
 
-	if (version > 1)
+	if (version > 1 && ret != -ENODATA)
 		ret = send_netlink_reply(ctx, reply_cmd,
 				nla_get_u32(info->attrs[TCMU_ATTR_DEVICE_ID]),
 				ret);
@@ -364,7 +363,9 @@ static struct tcmulib_handler *find_handler(struct tcmulib_context *ctx,
 	len = found_at - cfgstring;
 
 	for (size_t i = 0; i < ctx->handlers.size(); i++) {
-		if (!strncmp(cfgstring, ctx->handlers[i].subtype, len)) {
+		if (strlen(ctx->handlers[i].subtype) == len &&
+		    !strncmp(cfgstring, ctx->handlers[i].subtype, len)) {
+			LOG_INFO("find handler for subtype: `", cfgstring);
 			return &ctx->handlers[i];
 		}
 	}
@@ -557,8 +558,10 @@ static int device_add(struct tcmulib_context *ctx, char *dev_name,
 
 	dev->handler = find_handler(ctx, dev->cfgstring);
 	if (!dev->handler) {
-		LOG_ERROR("could not find handler for `", dev->dev_name);
-		goto err_free;
+		LOG_WARN("skipping device `: no matching handler for subtype",
+			 dev->dev_name);
+		delete dev;
+		return -ENODATA;
 	}
 
 	if (dev->handler->check_config &&
@@ -630,15 +633,16 @@ static void close_devices(struct tcmulib_context *ctx)
 	}
 }
 
-static void device_remove(struct tcmulib_context *ctx, char *dev_name,
-			  bool should_block)
+static int device_remove(struct tcmulib_context *ctx, char *dev_name,
+			 bool should_block)
 {
 	struct tcmu_device *dev;
 
 	dev = lookup_dev_by_name(ctx, dev_name);
 	if (!dev) {
-		LOG_ERROR("Could not remove device `: not found.", dev_name);
-		return;
+		LOG_WARN("skipping remove for device `: not managed by us",
+			 dev_name);
+		return -ENODATA;
 	}
 
 	/*
@@ -662,6 +666,7 @@ static void device_remove(struct tcmulib_context *ctx, char *dev_name,
 
 	LOG_DEBUG("[dev `] removed from tcmulib", dev->tcm_dev_name);
 	delete dev;
+	return 0;
 }
 
 static int read_uio_name(const char *uio_dev, char **dev_name)
